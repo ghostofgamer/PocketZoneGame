@@ -9,7 +9,12 @@ public class Gun : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            Instantiate(_bullet, _shotPosition.position, _shotPosition.rotation, _container);
+            Shot();
         }
+    }
+
+    public void Shot()
+    {
+         Instantiate(_bullet, _shotPosition.position, _shotPosition.rotation, _container);
     }
 }
