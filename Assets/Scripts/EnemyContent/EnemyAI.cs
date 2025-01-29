@@ -1,12 +1,15 @@
+using System.Collections.Generic;
 using PlayerContent;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class EnemyAI : MonoBehaviour
 {
-    [SerializeField] private Transform[] _patrolPoints;
-[SerializeField]private Animator _animator;
-
+    // [SerializeField] private Transform[] _patrolPoints;
+    [SerializeField] private Animator _animator;
+    [SerializeField] private int numberOfPatrolPoints = 5; 
+    [SerializeField] private float patrolPointGenerationRadius = 10f;
+    
     private int _damage = 15;
     public float viewDistance = 1f; // Расстояние обзора перед врагом
     public float viewWidth = 0.5f; // Ширина области обзора
@@ -14,7 +17,7 @@ public class EnemyAI : MonoBehaviour
     public float chaseSpeed = 3.5f;
     public Transform player;
     private PlayerHealth _playerHealth;
-
+    public float patrolWaitTime = 5f;
     public float attackRadius = 3f; // Радиус атаки
     public float attackCooldown = 1f;
 
@@ -22,29 +25,39 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent agent;
     private bool isChasing = false;
     private float lastAttackTime = 0f;
-
+    private float lastPatrolTime = 0f;
+    private List<Vector3> patrolPoints = new List<Vector3>();
+    
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         agent.updateUpAxis = false;
         agent.updateRotation = false;
+        
+        GeneratePatrolPoints();
         SetNextPatrolPoint();
     }
 
     private void Update()
     {
+        // Debug.Log(Time.time - lastPatrolTime>= patrolWaitTime);
+        
         if (isChasing)
         {
             agent.speed = chaseSpeed;
             agent.SetDestination(player.position);
-
+            _animator.SetBool("Walking", true);
+            
             if (!CanSeePlayer())
             {
+                _animator.SetBool("Attack", false);
                 isChasing = false;
                 agent.speed = patrolSpeed;
                 SetNextPatrolPoint();
             }
 
+            Debug.Log("Chasing "+  (Vector2.Distance(transform.position, player.position) <= attackRadius));
+            
             if (Vector2.Distance(transform.position, player.position) <= attackRadius)
             {
                 AttackPlayer();
@@ -54,11 +67,32 @@ public class EnemyAI : MonoBehaviour
         {
             agent.speed = patrolSpeed;
 
-            if (!agent.pathPending && agent.remainingDistance < 0.5f)
-                SetNextPatrolPoint();
+            if (!agent.pathPending && agent.remainingDistance < 0.1f)
+            {
+                if (lastPatrolTime == 0f)
+                {
+                    lastPatrolTime = Time.time;
+                }
+                
+                if (Time.time - lastPatrolTime >= patrolWaitTime)
+                {
+                    SetNextPatrolPoint();
+                }
+                else
+                {
+                    _animator.SetBool("Walking", false);
+                }
+            }
+            else
+            {
+                _animator.SetBool("Walking", true);
+            }
 
             if (CanSeePlayer())
+            {
                 isChasing = true;
+                // _animator.SetBool("Attack", true);
+            }
         }
 
         CheckDirection();
@@ -68,10 +102,24 @@ public class EnemyAI : MonoBehaviour
     {
         if (Time.time - lastAttackTime >= attackCooldown)
         {
+            _animator.SetBool("Attack", true);
             Debug.Log("Атакуем игрока!");
             if (_playerHealth != null)
                 _playerHealth.TakeDamage(_damage);
             lastAttackTime = Time.time;
+        }
+    }
+    
+    void GeneratePatrolPoints()
+    {
+        for (int i = 0; i < numberOfPatrolPoints; i++)
+        {
+            Vector3 randomPoint = transform.position + Random.insideUnitSphere * patrolPointGenerationRadius;
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(randomPoint, out hit, patrolPointGenerationRadius, NavMesh.AllAreas))
+            {
+                patrolPoints.Add(hit.position);
+            }
         }
     }
 
@@ -95,11 +143,21 @@ public class EnemyAI : MonoBehaviour
 
     void SetNextPatrolPoint()
     {
-        if (_patrolPoints.Length == 0)
+        if (patrolPoints.Count == 0)
+            return;
+
+        agent.SetDestination(patrolPoints[currentPatrolIndex]);
+        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Count;
+        lastPatrolTime = 0f;
+        
+        
+        
+        /*if (_patrolPoints.Length == 0)
             return;
 
         agent.SetDestination(_patrolPoints[currentPatrolIndex].position);
         currentPatrolIndex = (currentPatrolIndex + 1) % _patrolPoints.Length;
+        lastPatrolTime = 0f;*/
     }
 
     void OnDrawGizmosSelected()
