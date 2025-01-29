@@ -1,38 +1,40 @@
 using UnityEngine;
 
+[RequireComponent(typeof(Rigidbody), typeof(Animator))]
 public class PlayerMovement : MonoBehaviour
 {
-    public float moveSpeed = 5f;
-    private Rigidbody2D rb;
-    private Vector2 moveInput;
-    private Animator animator;
-    
+    private const string Speed = "Speed";
+    private const string Horizontal = "Horizontal";
+    private const string Vertical = "Vertical";
+
+    [SerializeField] private float _moveSpeed = 5f;
+    [SerializeField]private Joystick _joystick;
+
+    private Rigidbody2D _rb;
+    private Vector2 _moveInput;
+    private Animator _animator;
+    private float _flipValue = 180;
+
     void Start()
     {
-        rb = GetComponent<Rigidbody2D>();
-        animator = GetComponent<Animator>();
+        _rb = GetComponent<Rigidbody2D>();
+        _animator = GetComponent<Animator>();
     }
 
     void Update()
     {
-        if (moveInput.x < 0)
-        {
-            // Rotate to face left
-            transform.rotation = Quaternion.Euler(0, 180, 0);
-        }
-        else if (moveInput.x > 0)
-        {
-            // Rotate to face right
+        if (_moveInput.x < 0)
+            transform.rotation = Quaternion.Euler(0, _flipValue, 0);
+        else if (_moveInput.x > 0)
             transform.rotation = Quaternion.Euler(0, 0, 0);
-        }
-        
-        Debug.Log("Magnitude " + moveInput.magnitude);
-        animator.SetFloat("Speed", moveInput.magnitude);
-        moveInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
+
+        _animator.SetFloat(Speed, _moveInput.magnitude);
+        // _moveInput = new Vector2(Input.GetAxis(Horizontal), Input.GetAxis(Vertical));
+        _moveInput = new Vector2(_joystick.Horizontal, _joystick.Vertical);
     }
 
     void FixedUpdate()
     {
-        rb.MovePosition(rb.position + moveInput * moveSpeed * Time.fixedDeltaTime);
+        _rb.MovePosition(_rb.position + _moveInput * _moveSpeed * Time.fixedDeltaTime);
     }
 }
