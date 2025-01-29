@@ -1,29 +1,30 @@
 using UI.Buttons;
 using UnityEngine;
 
-public class ChangeWeapon : AbstractButton
+public class ChangeWeapon : MonoBehaviour
 {
     [SerializeField] private Gun[] _guns;
     [SerializeField]private PlayerShot _playerShot;
+    [SerializeField]private Animator _animator;
+    [SerializeField] private PlayerAnimation _playerAnimation;
 
     private int _currentGunIndex = 0;
-    
+
     private void Start()
     {
         OffGuns();
+        _playerAnimation.SetIndexWeapon(_currentGunIndex);
         _guns[_currentGunIndex].gameObject.SetActive(true);
+        // _animator.SetInteger("IndexWeapon", _currentGunIndex);
+        
         _playerShot.SetGun(_guns[_currentGunIndex]);
     }
 
-    protected override void OnClick()
-    {
-        Change();
-    }
-
-    private void Change()
+    public void Change()
     {
         OffGuns();
         _currentGunIndex = (_currentGunIndex + 1) % _guns.Length;
+        _playerAnimation.SetIndexWeapon(_currentGunIndex);
         _guns[_currentGunIndex].gameObject.SetActive(true);
         _playerShot.SetGun(_guns[_currentGunIndex]);
     }
