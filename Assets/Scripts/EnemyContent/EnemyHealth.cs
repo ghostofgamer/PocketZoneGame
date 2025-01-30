@@ -8,9 +8,11 @@ public class EnemyHealth : MonoBehaviour,IDamageable
     [SerializeField] private int _maxHealth = 100;
     
     private int _currentHealth;
+    private Enemy _enemy;
 
     private void Start()
     {
+        _enemy = GetComponent<Enemy>();
         _currentHealth = _maxHealth;
         _healthBar.SetHealth(_currentHealth, _maxHealth);
     }
@@ -31,6 +33,7 @@ public class EnemyHealth : MonoBehaviour,IDamageable
 
     private void Die()
     {
+        Instantiate(_enemy.ItemPickUp, transform.position, Quaternion.identity);
         gameObject.SetActive(false);
     }
 }

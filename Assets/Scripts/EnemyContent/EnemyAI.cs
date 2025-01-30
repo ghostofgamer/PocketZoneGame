@@ -56,7 +56,7 @@ public class EnemyAI : MonoBehaviour
                 SetNextPatrolPoint();
             }
 
-            Debug.Log("Chasing "+  (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius));
+            // Debug.Log("Chasing "+  (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius));
             
             if (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius)
             {

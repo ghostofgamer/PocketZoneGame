@@ -2,11 +2,16 @@ using UnityEngine;
 
 public class Spawner : MonoBehaviour
 {
-    public GameObject monsterPrefab; // Префаб монстра
-    public int numberOfMonsters = 3; // Количество монстров для спавна
-    public float spawnRadius = 5f; // Радиус спавна
-    public Vector2 spawnAreaMin = new Vector2(-5, -5); // Минимальные координаты области спавна
+    [SerializeField] private ItemPickUp[] _items; 
+    
+    public Enemy monsterPrefab;
+    public int numberOfMonsters = 3; 
+    public float spawnRadius = 5f; 
+    public Vector2 spawnAreaMin = new Vector2(-5, -5); 
     public Vector2 spawnAreaMax = new Vector2(5, 5);
+
+    private Enemy _enemy;
+    
     private void Start()
     {
         SpawnMonsters();
@@ -20,7 +25,10 @@ public class Spawner : MonoBehaviour
                 Random.Range(spawnAreaMin.x, spawnAreaMax.x),
                 Random.Range(spawnAreaMin.y, spawnAreaMax.y)
             );
-            Instantiate(monsterPrefab, randomPosition, Quaternion.identity);
+            _enemy =  Instantiate(monsterPrefab, randomPosition, Quaternion.identity);
+            
+            
+            _enemy.SetItem(_items[Random.Range(0, _items.Length)]);
         }
     }
 

@@ -1,6 +1,4 @@
-using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 
 public class DataBase : MonoBehaviour
@@ -14,6 +12,5 @@ public class Item
     public int id;
     public string name;
     public Sprite img;
+    public bool isBullets;
 }
-
-

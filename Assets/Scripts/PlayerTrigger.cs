@@ -13,6 +13,7 @@ public class PlayerTrigger : MonoBehaviour
         {
             Debug.Log("PlayerTrigger");
             _inventory.Add(item.Index,item.Count);
+            item.gameObject.SetActive(false);               
         }
     }
 }

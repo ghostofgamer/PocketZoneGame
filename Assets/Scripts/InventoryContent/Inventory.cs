@@ -22,6 +22,14 @@ public class Inventory : MonoBehaviour
     public Vector3 offset;
     public GameObject backGround;
 
+    public event Action<int> BulletsValueChanged;
+
+    public int Bullets { get; private set; }
+    
+    private bool isDragging = false;
+    private Vector2 mouseDownPosition;
+    private float dragThreshold = 10f;
+
     private void Start()
     {
         if (items.Count == 0)
@@ -29,27 +37,38 @@ public class Inventory : MonoBehaviour
             AddGraphics();
         }
 
+        /*
         for (int i = 0; i < maxCount; i++)
         {
-            AddItem(i, data.items[0], 0);
-            
-            // AddItem(i, data.items[Random.Range(0, data.items.Count)], Random.Range(0, 99));
+            // AddItem(i, data.items[0], 0);
+
+            AddItem(i, data.items[Random.Range(0, data.items.Count)], Random.Range(0, 99));
         }
+        */
 
         UpdateInventory();
+        CheckBullets();
     }
 
-    public void Add(int id,int count)
+    public void Add(int id, int count)
     {
         for (int i = 0; i < items.Count; i++)
         {
             if (items[i].id == 0)
             {
                 AddItem(i, data.items[id], count);
+
+                if (data.items[id].isBullets)
+                {
+                    Debug.Log("Adding Bullet");
+                    BulletsStartCheck();
+                }
+
+
                 return;
             }
         }
-        
+
         Debug.Log("нет места ");
     }
 
@@ -59,22 +78,21 @@ public class Inventory : MonoBehaviour
         {
             MoveObject();
         }
-        else{
-            UpdateInventory();
-        }
-
-        if (Input.GetKeyDown(KeyCode.I))
+        else
         {
-            backGround.SetActive(!backGround.activeSelf);
-
-            if (backGround.activeSelf)
-            {
-                UpdateInventory();
-            }
+            UpdateInventory();
         }
     }
 
-    public void SearchForSameItem(Item item, int count)
+    public void ChangeActivatedInventory()
+    {
+        backGround.SetActive(!backGround.activeSelf);
+
+        if (backGround.activeSelf)
+            UpdateInventory();
+    }
+
+    /*public void SearchForSameItem(Item item, int count)
     {
         for (int i = 0; i < maxCount; i++)
         {
@@ -109,7 +127,7 @@ public class Inventory : MonoBehaviour
                 }
             }
         }
-    }
+    }*/
 
     public void AddItem(int id, Item item, int count)
     {
@@ -134,6 +152,8 @@ public class Inventory : MonoBehaviour
         items[id].count = invItem.count;
         items[id].itemGameObject.GetComponent<Image>().sprite = data.items[invItem.id].img;
 
+        // items[id].isBullets = invItem.isBullets;
+
         if (invItem.count > 1 && invItem.id != 0)
         {
             items[id].itemGameObject.GetComponentInChildren<Text>().text = invItem.count.ToString();
@@ -149,6 +169,7 @@ public class Inventory : MonoBehaviour
         for (int i = 0; i < maxCount; i++)
         {
             GameObject newItem = Instantiate(gameObjShow, InventoryMainObject.transform) as GameObject;
+            newItem.GetComponent<ItemDrag>().Init(this,i);
             newItem.name = i.ToString();
             ItemInventory ii = new ItemInventory();
             ii.itemGameObject = newItem;
@@ -159,7 +180,7 @@ public class Inventory : MonoBehaviour
 
             Button tempButton = newItem.GetComponent<Button>();
 
-            tempButton.onClick.AddListener(delegate { SelectObject(); });
+            // tempButton.onClick.AddListener(delegate { SelectObject(); });
 
             items.Add(ii);
         }
@@ -179,6 +200,7 @@ public class Inventory : MonoBehaviour
             }
 
             items[i].itemGameObject.GetComponent<Image>().sprite = data.items[items[i].id].img;
+            items[i].isBullets = data.items[items[i].id].isBullets;
         }
     }
 
@@ -188,7 +210,7 @@ public class Inventory : MonoBehaviour
         {
             /*if (data.items[currentItem.id].id == 0)
                 return;*/
-            
+
             currentID = int.Parse(es.currentSelectedGameObject.name);
 
             if (items[currentID].id == 0)
@@ -198,13 +220,13 @@ public class Inventory : MonoBehaviour
                 return;
             }
             
+           // bool drag =  StartCheckDrag();
             
+
             currentItem = CopyInventoryItem(items[currentID]);
             movingObject.gameObject.SetActive(true);
             movingObject.GetComponent<Image>().sprite = data.items[currentItem.id].img;
             AddItem(currentID, data.items[0], 0);
-            // Debug.Log(data.items[currentItem.id].id);
-            // Debug.Log(items[currentID]);
         }
         else
         {
@@ -250,6 +272,125 @@ public class Inventory : MonoBehaviour
         New.count = old.count;
         return New;
     }
+
+    private void BulletsStartCheck()
+    {
+        StartCoroutine(BulletsCheck());
+    }
+
+    private IEnumerator BulletsCheck()
+    {
+        yield return new WaitForSeconds(0.1f);
+        CheckBullets();
+    }
+
+    public void CheckBullets()
+    {
+        Bullets = 0;
+
+        foreach (var item in items)
+        {
+            if (item.isBullets)
+            {
+                Bullets += item.count;
+                // BulletsValueChanged?.Invoke(Bullets);
+                Debug.Log("патроны " + Bullets);
+            }
+        }
+
+        /*if (Bullets == 0)*/
+            BulletsValueChanged?.Invoke(Bullets);
+    }
+
+    public void DecreaseBullets()
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].isBullets)
+            {
+                items[i].count -= 1;
+                // items[id].count = invItem.count;      
+                if (items[i].count <= 0)
+                    AddItem(i, data.items[0], 0);
+
+                return;
+            }
+        }
+
+        Bullets--;
+        BulletsValueChanged?.Invoke(Bullets);
+    }
+
+    public void DeleteItem(int id )
+    {
+        AddItem(id, data.items[0], 0);
+        CheckBullets();
+        UpdateInventory();
+    }
+    
+    
+    
+    public void OnItemDragStart(int id)
+    {
+        if (items[id].id == 0) return;
+        
+        currentID = id;
+        currentItem = CopyInventoryItem(items[currentID]);
+        movingObject.gameObject.SetActive(true);
+        movingObject.GetComponent<Image>().sprite = data.items[currentItem.id].img;
+        AddItem(currentID, data.items[0], 0);
+        isDragging = true;
+    }
+
+    public void OnItemDragEnd(int id)
+    {
+        if (currentID != -1)
+        {
+            ItemInventory II = items[id];
+            Debug.Log("не -1 ");
+
+            if (currentItem.id != II.id)
+            {
+                AddInventoryItem(currentID, II);
+                AddInventoryItem(id, currentItem);
+            }
+            else
+            {
+                if (II.count + currentItem.count <= 128)
+                {
+                    II.count += currentItem.count;
+                }
+                else
+                {
+                    AddItem(currentID, data.items[II.id], II.count + currentItem.count - 128);
+                    II.count = 128;
+                }
+
+                II.itemGameObject.GetComponentInChildren<Text>().text = II.count.ToString();
+            }
+
+            currentID = -1;
+            movingObject.gameObject.SetActive(false);
+            isDragging = false;
+        }
+    }
+
+    public void OnItemClick(int id)
+    {
+        if (items[id].id == 0)
+        {
+            Debug.Log(items[id].id);
+            return;
+        }
+
+        // Логика открытия окна или другой логики при клике на предмет
+        Debug.Log("Item clicked: " + id);
+    }
+
+    public bool CheckEmpty(int id)
+    {
+        return items[id].id > 0;
+    }
 }
 
 [System.Serializable]
@@ -258,4 +399,5 @@ public class ItemInventory
     public int id;
     public GameObject itemGameObject;
     public int count;
+    public bool isBullets;
 }
