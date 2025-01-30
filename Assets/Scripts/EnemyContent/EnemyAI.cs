@@ -15,7 +15,7 @@ public class EnemyAI : MonoBehaviour
     public float viewWidth = 0.5f; // Ширина области обзора
     public float patrolSpeed = 2f; // Скорость патрулирования
     public float chaseSpeed = 3.5f;
-    public Transform player;
+    public Transform playerTransform;
     private PlayerHealth _playerHealth;
     public float patrolWaitTime = 5f;
     public float attackRadius = 3f; // Радиус атаки
@@ -45,7 +45,7 @@ public class EnemyAI : MonoBehaviour
         if (isChasing)
         {
             agent.speed = chaseSpeed;
-            agent.SetDestination(player.position);
+            agent.SetDestination(playerTransform.position);
             _animator.SetBool("Walking", true);
             
             if (!CanSeePlayer())
@@ -56,9 +56,9 @@ public class EnemyAI : MonoBehaviour
                 SetNextPatrolPoint();
             }
 
-            Debug.Log("Chasing "+  (Vector2.Distance(transform.position, player.position) <= attackRadius));
+            Debug.Log("Chasing "+  (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius));
             
-            if (Vector2.Distance(transform.position, player.position) <= attackRadius)
+            if (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius)
             {
                 AttackPlayer();
             }
@@ -132,6 +132,7 @@ public class EnemyAI : MonoBehaviour
         {
             if (hit.gameObject.TryGetComponent(out PlayerHealth player))
             {
+                playerTransform = player.transform;
                 _playerHealth = player;
                 return true;
             }
