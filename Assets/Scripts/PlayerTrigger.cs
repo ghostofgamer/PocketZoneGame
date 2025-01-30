@@ -11,9 +11,7 @@ public class PlayerTrigger : MonoBehaviour
     {
         if (other.TryGetComponent(out ItemPickUp item))
         {
-            Debug.Log("PlayerTrigger");
-            _inventory.Add(item.Index,item.Count);
-            item.gameObject.SetActive(false);               
+            _inventory.Add(item,item.Index,item.Count);
         }
     }
 }

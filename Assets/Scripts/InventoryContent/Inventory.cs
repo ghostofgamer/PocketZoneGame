@@ -1,6 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using SaveDataContent;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -8,6 +11,8 @@ using Random = UnityEngine.Random;
 
 public class Inventory : MonoBehaviour
 {
+    [SerializeField] private Storage _storage;
+
     public DataBase data;
     public List<ItemInventory> items = new List<ItemInventory>();
     public GameObject gameObjShow;
@@ -25,16 +30,38 @@ public class Inventory : MonoBehaviour
     public event Action<int> BulletsValueChanged;
 
     public int Bullets { get; private set; }
-    
+
     private bool isDragging = false;
     private Vector2 mouseDownPosition;
     private float dragThreshold = 10f;
 
     private void Start()
     {
+        // LoadInventoryFromFile("path/to/savefile.json");
+
         if (items.Count == 0)
         {
             AddGraphics();
+        }
+        
+        SaveData save = _storage.LoadDataInfo();
+
+        if (save != null)
+        {
+            foreach (var item in save.items)
+            {
+                if (item.id > 0)
+                    AddItem(item.idPosition,data.items[item.id],item.count);
+               /*items[item.id]*/
+            }
+            
+            
+            /*if(save)
+            
+            for (int i = 0; i < save.items.Count; i++)
+            {
+                items[0].
+            }*/
         }
 
         /*
@@ -48,23 +75,43 @@ public class Inventory : MonoBehaviour
 
         UpdateInventory();
         CheckBullets();
+        // _storage.SaveGame(items);
+        
+        
+        
+        /*SaveData save = _storage.LoadDataInfo();
+        
+        if (save != null)
+        {
+            Debug.Log("Data loaded:");
+
+            foreach (var item in save.items)
+            {
+                Debug.Log($"ID: {item.id}, Position: {item.idPosition}, Count: {item.count}");
+            }
+        }
+        else
+        {
+            Debug.Log("No saved data found.");
+        }*/
     }
 
-    public void Add(int id, int count)
+    public void Add(ItemPickUp itemPickUp, int id, int count)
     {
         for (int i = 0; i < items.Count; i++)
         {
             if (items[i].id == 0)
             {
                 AddItem(i, data.items[id], count);
-
+                itemPickUp.gameObject.SetActive(false);  
+                
                 if (data.items[id].isBullets)
                 {
+                    
                     Debug.Log("Adding Bullet");
                     BulletsStartCheck();
                 }
-
-
+                
                 return;
             }
         }
@@ -78,10 +125,10 @@ public class Inventory : MonoBehaviour
         {
             MoveObject();
         }
-        else
+        /*else
         {
             UpdateInventory();
-        }
+        }*/
     }
 
     public void ChangeActivatedInventory()
@@ -144,6 +191,9 @@ public class Inventory : MonoBehaviour
         {
             items[id].itemGameObject.GetComponentInChildren<Text>().text = "";
         }
+
+        UpdateInventory();
+        _storage.SaveGame();
     }
 
     public void AddInventoryItem(int id, ItemInventory invItem)
@@ -162,6 +212,8 @@ public class Inventory : MonoBehaviour
         {
             items[id].itemGameObject.GetComponentInChildren<Text>().text = "";
         }
+
+        // _storage.SaveGame(items);
     }
 
     public void AddGraphics()
@@ -169,7 +221,7 @@ public class Inventory : MonoBehaviour
         for (int i = 0; i < maxCount; i++)
         {
             GameObject newItem = Instantiate(gameObjShow, InventoryMainObject.transform) as GameObject;
-            newItem.GetComponent<ItemDrag>().Init(this,i);
+            newItem.GetComponent<ItemDrag>().Init(this, i);
             newItem.name = i.ToString();
             ItemInventory ii = new ItemInventory();
             ii.itemGameObject = newItem;
@@ -202,6 +254,9 @@ public class Inventory : MonoBehaviour
             items[i].itemGameObject.GetComponent<Image>().sprite = data.items[items[i].id].img;
             items[i].isBullets = data.items[items[i].id].isBullets;
         }
+
+        // SaveInventoryToFile("path/to/savefile.json");
+        // _storage.SaveGame(items);
     }
 
     public void SelectObject()
@@ -219,9 +274,9 @@ public class Inventory : MonoBehaviour
                 currentID = -1;
                 return;
             }
-            
-           // bool drag =  StartCheckDrag();
-            
+
+            // bool drag =  StartCheckDrag();
+
 
             currentItem = CopyInventoryItem(items[currentID]);
             movingObject.gameObject.SetActive(true);
@@ -299,7 +354,8 @@ public class Inventory : MonoBehaviour
         }
 
         /*if (Bullets == 0)*/
-            BulletsValueChanged?.Invoke(Bullets);
+        BulletsValueChanged?.Invoke(Bullets);
+        // _storage.SaveGame(items);
     }
 
     public void DecreaseBullets()
@@ -309,6 +365,8 @@ public class Inventory : MonoBehaviour
             if (items[i].isBullets)
             {
                 items[i].count -= 1;
+                Bullets--;
+                BulletsValueChanged?.Invoke(Bullets);
                 // items[id].count = invItem.count;      
                 if (items[i].count <= 0)
                     AddItem(i, data.items[0], 0);
@@ -317,23 +375,26 @@ public class Inventory : MonoBehaviour
             }
         }
 
-        Bullets--;
-        BulletsValueChanged?.Invoke(Bullets);
+        // _storage.SaveGame(items);
+        
+        
+        
+        /*Bullets--;
+        BulletsValueChanged?.Invoke(Bullets);*/
     }
 
-    public void DeleteItem(int id )
+    public void DeleteItem(int id)
     {
         AddItem(id, data.items[0], 0);
         CheckBullets();
         UpdateInventory();
     }
-    
-    
-    
+
+
     public void OnItemDragStart(int id)
     {
         if (items[id].id == 0) return;
-        
+
         currentID = id;
         currentItem = CopyInventoryItem(items[currentID]);
         movingObject.gameObject.SetActive(true);
