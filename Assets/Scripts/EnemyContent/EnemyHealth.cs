@@ -2,38 +2,43 @@ using HealthBarContent;
 using Interfaces;
 using UnityEngine;
 
-public class EnemyHealth : MonoBehaviour,IDamageable
+namespace EnemyContent
 {
-    [SerializeField] private HealthBar _healthBar;
-    [SerializeField] private int _maxHealth = 100;
-    
-    private int _currentHealth;
-    private Enemy _enemy;
-
-    private void Start()
+    [RequireComponent(typeof(Enemy))]
+    public class EnemyHealth : MonoBehaviour,IDamageable
     {
-        _enemy = GetComponent<Enemy>();
-        _currentHealth = _maxHealth;
-        _healthBar.SetHealth(_currentHealth, _maxHealth);
-    }
+        [SerializeField] private HealthBar _healthBar;
+        [SerializeField] private int _maxHealth = 100;
     
-    public void TakeDamage(int damage)
-    {
-        if (damage <= 0) return;
-        _currentHealth -= damage;
+        private int _currentHealth;
+        private Enemy _enemy;
 
-        if (_currentHealth <= 0)
+        private void Start()
         {
-            _currentHealth = 0;
-            Die();
+            _enemy = GetComponent<Enemy>();
+            _currentHealth = _maxHealth;
+            _healthBar.SetHealth(_currentHealth, _maxHealth);
         }
+    
+        public void TakeDamage(int damage)
+        {
+            if (damage <= 0) return;
             
-        _healthBar.SetHealth(_currentHealth, _maxHealth);
-    }
+            _currentHealth -= damage;
 
-    private void Die()
-    {
-        Instantiate(_enemy.ItemPickUp, transform.position, Quaternion.identity);
-        gameObject.SetActive(false);
+            if (_currentHealth <= 0)
+            {
+                _currentHealth = 0;
+                Die();
+            }
+            
+            _healthBar.SetHealth(_currentHealth, _maxHealth);
+        }
+
+        private void Die()
+        {
+            Instantiate(_enemy.ItemPickUp, transform.position, Quaternion.identity);
+            gameObject.SetActive(false);
+        }
     }
 }

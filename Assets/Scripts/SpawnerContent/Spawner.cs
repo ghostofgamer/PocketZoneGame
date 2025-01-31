@@ -1,3 +1,4 @@
+using EnemyContent;
 using InventoryContent;
 using UnityEngine;
 

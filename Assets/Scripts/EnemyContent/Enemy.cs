@@ -1,14 +1,17 @@
 using InventoryContent;
 using UnityEngine;
 
-public class Enemy : MonoBehaviour
+namespace EnemyContent
 {
-    [SerializeField] private Transform _target;
-    
-    public ItemPickUp ItemPickUp { get;private set; }
-    
-    public void SetItem(ItemPickUp itemPickUp)
+    public class Enemy : MonoBehaviour
     {
-        ItemPickUp = itemPickUp;
+        [SerializeField] private Transform _target;
+    
+        public ItemPickUp ItemPickUp { get;private set; }
+    
+        public void SetItem(ItemPickUp itemPickUp)
+        {
+            ItemPickUp = itemPickUp;
+        }
     }
 }

@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using PlayerContent;
 using UnityEngine;
 using UnityEngine.AI;
@@ -100,7 +101,7 @@ public class EnemyAI : MonoBehaviour
         if (Time.time - lastAttackTime >= attackCooldown)
         {
             _animator.SetBool("Attack", true);
-            Debug.Log("Атакуем игрока!");
+        
             if (_playerHealth != null)
                 _playerHealth.TakeDamage(_damage);
             lastAttackTime = Time.time;
@@ -109,7 +110,27 @@ public class EnemyAI : MonoBehaviour
     
     void GeneratePatrolPoints()
     {
+        patrolPoints.Clear();
+
+        float angleIncrement = 360f / numberOfPatrolPoints;
+
         for (int i = 0; i < numberOfPatrolPoints; i++)
+        {
+            float angle = i * angleIncrement * Mathf.Deg2Rad;
+            Vector3 pointOnCircle = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * patrolPointGenerationRadius;
+            Vector3 randomPoint = transform.position + pointOnCircle;
+
+            NavMeshHit hit;
+
+            if (NavMesh.SamplePosition(randomPoint, out hit, patrolPointGenerationRadius, NavMesh.AllAreas))
+            {
+                patrolPoints.Add(hit.position);
+            }
+        }
+        
+        
+        
+        /*for (int i = 0; i < numberOfPatrolPoints; i++)
         {
             Vector3 randomPoint = transform.position + Random.insideUnitSphere * patrolPointGenerationRadius;
             randomPoint.z = 0;
@@ -120,6 +141,16 @@ public class EnemyAI : MonoBehaviour
             {
                 patrolPoints.Add(hit.position);
             }
+        }*/
+    }
+    
+    void OnDrawGizmos()
+    {
+        Gizmos.color = Color.red;
+        
+        foreach (var point in patrolPoints)
+        {
+            Gizmos.DrawSphere(point, 0.5f);
         }
     }
 
@@ -144,12 +175,17 @@ public class EnemyAI : MonoBehaviour
 
     void SetNextPatrolPoint()
     {
-        // Debug.Log("Next Patrol Point");
-        
         if (patrolPoints.Count == 0)
             return;
-        // Debug.Log("Next!!!");
+        
         agent.SetDestination(patrolPoints[currentPatrolIndex]);
+
+        /*
+        while ()
+        {
+            
+        }*/
+        
         currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Count;
         lastPatrolTime = 0f;
     }
