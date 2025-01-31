@@ -1,3 +1,4 @@
+using InventoryContent;
 using UnityEngine;
 
 namespace UI.Buttons

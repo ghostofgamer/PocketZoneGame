@@ -49368,23 +49368,15 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _storage: {fileID: 573831321}
-  data: {fileID: 963194231}
-  items: []
-  gameObjShow: {fileID: 9212308278093836017, guid: 9c60852afb3d0c9499338aab7a15580e, type: 3}
-  InventoryMainObject: {fileID: 705520126}
-  maxCount: 30
-  cam: {fileID: 963194227}
-  es: {fileID: 645716570}
-  currentID: -1
-  currentItem:
-    id: 0
-    itemGameObject: {fileID: 0}
-    count: 0
-    isBullets: 0
-    isMedicine: 0
-  movingObject: {fileID: 790668510}
-  offset: {x: 1, y: -1, z: 0}
-  backGround: {fileID: 1625941279}
+  _data: {fileID: 963194231}
+  _gameObjShow: {fileID: 9212308278093836017, guid: 9c60852afb3d0c9499338aab7a15580e, type: 3}
+  _inventoryMainObject: {fileID: 705520126}
+  _maxCount: 30
+  _cam: {fileID: 963194227}
+  _currentID: -1
+  _movingObject: {fileID: 790668510}
+  _offset: {x: 1, y: -1, z: 0}
+  _backGround: {fileID: 1625941279}
 --- !u!114 &963194231
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -49397,6 +49389,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 29ac0d5a46b163045961722ad6146fb8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _sprites:
+  - {fileID: 21300000, guid: 4ecc61374a8da14409bab614d5e5584d, type: 3}
+  - {fileID: 21300000, guid: 7e6499d71b85dfc4bab9f165c750e977, type: 3}
+  - {fileID: 21300000, guid: d45f0cae013abb84688afe6e4bc52845, type: 3}
   items:
   - id: 0
     name: Empty

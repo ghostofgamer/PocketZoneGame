@@ -52,10 +52,10 @@ namespace SaveDataContent
         private IEnumerator SaveInventoryData()
         {
             SaveData saveData = CreateSaveData();
-            saveData.items = new List<ItemData>(_inventory.items.Count);
+            saveData.items = new List<ItemData>(_inventory.Items.Count);
 
-            for (int i = 0; i < _inventory.items.Count; i++)
-                saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
+            for (int i = 0; i < _inventory.Items.Count; i++)
+                saveData.items.Add(new ItemData(_inventory.Items[i].id, _inventory.Items[i].count, i));
 
             SaveData(saveData);
             yield return null;

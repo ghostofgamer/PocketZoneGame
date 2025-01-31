@@ -1,3 +1,4 @@
+using InventoryContent;
 using UnityEngine;
 
 public class Enemy : MonoBehaviour

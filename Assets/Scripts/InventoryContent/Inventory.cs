@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using SaveDataContent;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.UI;
 
 namespace InventoryContent
@@ -11,35 +10,36 @@ namespace InventoryContent
     public class Inventory : MonoBehaviour
     {
         [SerializeField] private Storage _storage;
-
-        public DataBase data;
-        public List<ItemInventory> items = new List<ItemInventory>();
-        public GameObject gameObjShow;
-        public GameObject InventoryMainObject;
-        public int maxCount;
-
-        public Camera cam;
-        public EventSystem es;
-        public int currentID;
-        public ItemInventory currentItem;
-        public RectTransform movingObject;
-        public Vector3 offset;
-        public GameObject backGround;
-
+        [SerializeField] private DataBase _data;
+        [SerializeField] private GameObject _gameObjShow;
+        [SerializeField] private GameObject _inventoryMainObject;
+        [SerializeField] private int _maxCount;
+        [SerializeField] private Camera _cam;
+        [SerializeField] private int _currentID;
+        [SerializeField] private RectTransform _movingObject;
+        [SerializeField] private Vector3 _offset;
+        [SerializeField] private GameObject _backGround;
+         
+        private List<ItemInventory> _items = new List<ItemInventory>();
+        private ItemInventory _currentItem;
+        private int _medicineCount;
+        private bool _isDragging = false;
+        private Vector2 _mouseDownPosition;
+        private float _dragThreshold = 10f;
+        private WaitForSeconds _waitForSeconds = new WaitForSeconds(0.1f);
+        private int _maxStackSize = 130;
+        
         public event Action<int> BulletsValueChanged;
         
         public event Action InventoryChanged;
-
+        
         public int Bullets { get; private set; }
-        public int Medicine { get; private set; }
-
-        private bool isDragging = false;
-        private Vector2 mouseDownPosition;
-        private float dragThreshold = 10f;
+        
+        public List<ItemInventory> Items => _items;
 
         private void Start()
         {
-            if (items.Count == 0)
+            if (_items.Count == 0)
                 AddGraphics();
         
             SaveData save = _storage.LoadDataInfo();
@@ -49,7 +49,7 @@ namespace InventoryContent
                 foreach (var item in save.items)
                 {
                     if (item.id > 0)
-                        AddItem(item.idPosition,data.items[item.id],item.count);
+                        AddItem(item.idPosition,_data.items[item.id],item.count);
                 }
             }
             
@@ -59,14 +59,14 @@ namespace InventoryContent
 
         public void Add(ItemPickUp itemPickUp, int id, int count)
         {
-            for (int i = 0; i < items.Count; i++)
+            for (int i = 0; i < _items.Count; i++)
             {
-                if (items[i].id == 0)
+                if (_items[i].id == 0)
                 {
-                    AddItem(i, data.items[id], count);
+                    AddItem(i, _data.items[id], count);
                     itemPickUp.gameObject.SetActive(false);  
                 
-                    if (data.items[id].isBullets)
+                    if (_data.items[id].isBullets)
                         BulletsStartCheck();
                 
                     return;
@@ -76,28 +76,28 @@ namespace InventoryContent
 
         public void Update()
         {
-            if (currentID != -1)
+            if (_currentID != -1)
                 MoveObject();
         }
 
         public void ChangeActivatedInventory()
         {
-            backGround.SetActive(!backGround.activeSelf);
+            _backGround.SetActive(!_backGround.activeSelf);
 
-            if (backGround.activeSelf)
+            if (_backGround.activeSelf)
                 UpdateInventory();
         }
     
         private void AddItem(int id, Item item, int count)
         {
-            items[id].id = item.id;
-            items[id].count = count;
-            items[id].itemGameObject.GetComponent<Image>().sprite = item.img;
+            _items[id].id = item.id;
+            _items[id].count = count;
+            _items[id].itemGameObject.GetComponent<Image>().sprite = item.img;
 
             if (count > 1 && item.id != 0)
-                items[id].itemGameObject.GetComponentInChildren<Text>().text = count.ToString();
+                _items[id].itemGameObject.GetComponentInChildren<Text>().text = count.ToString();
             else
-                items[id].itemGameObject.GetComponentInChildren<Text>().text = "";
+                _items[id].itemGameObject.GetComponentInChildren<Text>().text = "";
 
             UpdateInventory();
             InventoryChanged?.Invoke();
@@ -105,21 +105,21 @@ namespace InventoryContent
 
         public void AddInventoryItem(int id, ItemInventory invItem)
         {
-            items[id].id = invItem.id;
-            items[id].count = invItem.count;
-            items[id].itemGameObject.GetComponent<Image>().sprite = data.items[invItem.id].img;
+            _items[id].id = invItem.id;
+            _items[id].count = invItem.count;
+            _items[id].itemGameObject.GetComponent<Image>().sprite = _data.items[invItem.id].img;
 
             if (invItem.count > 1 && invItem.id != 0)
-                items[id].itemGameObject.GetComponentInChildren<Text>().text = invItem.count.ToString();
+                _items[id].itemGameObject.GetComponentInChildren<Text>().text = invItem.count.ToString();
             else
-                items[id].itemGameObject.GetComponentInChildren<Text>().text = "";
+                _items[id].itemGameObject.GetComponentInChildren<Text>().text = "";
         }
 
         private void AddGraphics()
         {
-            for (int i = 0; i < maxCount; i++)
+            for (int i = 0; i < _maxCount; i++)
             {
-                GameObject newItem = Instantiate(gameObjShow, InventoryMainObject.transform) as GameObject;
+                GameObject newItem = Instantiate(_gameObjShow, _inventoryMainObject.transform) as GameObject;
                 newItem.GetComponent<ItemDrag>().Init(this, i);
                 newItem.name = i.ToString();
                 ItemInventory ii = new ItemInventory();
@@ -129,22 +129,22 @@ namespace InventoryContent
                 rt.localScale = new Vector3(1, 1, 1);
                 newItem.GetComponentInChildren<RectTransform>().localScale = new Vector3(1, 1, 1);
                 Button tempButton = newItem.GetComponent<Button>();
-                items.Add(ii);
+                _items.Add(ii);
             }
         }
 
         private void UpdateInventory()
         {
-            for (int i = 0; i < maxCount; i++)
+            for (int i = 0; i < _maxCount; i++)
             {
-                if (items[i].id != 0 && items[i].count > 1)
-                    items[i].itemGameObject.GetComponentInChildren<Text>().text = items[i].count.ToString();
+                if (_items[i].id != 0 && _items[i].count > 1)
+                    _items[i].itemGameObject.GetComponentInChildren<Text>().text = _items[i].count.ToString();
                 else
-                    items[i].itemGameObject.GetComponentInChildren<Text>().text = "";
+                    _items[i].itemGameObject.GetComponentInChildren<Text>().text = "";
 
-                items[i].itemGameObject.GetComponent<Image>().sprite = data.items[items[i].id].img;
-                items[i].isBullets = data.items[items[i].id].isBullets;
-                items[i].isMedicine = data.items[items[i].id].isMedicine;
+                _items[i].itemGameObject.GetComponent<Image>().sprite = _data.items[_items[i].id].img;
+                _items[i].isBullets = _data.items[_items[i].id].isBullets;
+                _items[i].isMedicine = _data.items[_items[i].id].isMedicine;
             }
             
             InventoryChanged?.Invoke();
@@ -152,9 +152,9 @@ namespace InventoryContent
         
         private void MoveObject()
         {
-            Vector3 pos = Input.mousePosition + offset;
-            pos.z = InventoryMainObject.GetComponent<RectTransform>().position.z;
-            movingObject.position = cam.ScreenToWorldPoint(pos);
+            Vector3 pos = Input.mousePosition + _offset;
+            pos.z = _inventoryMainObject.GetComponent<RectTransform>().position.z;
+            _movingObject.position = _cam.ScreenToWorldPoint(pos);
         }
 
         private ItemInventory CopyInventoryItem(ItemInventory old)
@@ -173,7 +173,7 @@ namespace InventoryContent
 
         private IEnumerator BulletsCheck()
         {
-            yield return new WaitForSeconds(0.1f);
+            yield return _waitForSeconds;
             CheckBullets();
         }
 
@@ -181,12 +181,10 @@ namespace InventoryContent
         {
             Bullets = 0;
 
-            foreach (var item in items)
+            foreach (var item in _items)
             {
                 if (item.isBullets)
-                {
                     Bullets += item.count;
-                }
             }
         
             BulletsValueChanged?.Invoke(Bullets);
@@ -194,32 +192,29 @@ namespace InventoryContent
 
         public bool CheckHeal()
         {
-            Medicine = 0;
+            _medicineCount = 0;
         
-            foreach (var item in items)
+            foreach (var item in _items)
             {
                 if (item.isMedicine)
-                {
-                    Medicine += item.count;
-                    Debug.Log("лекарства " + Medicine);
-                }
+                    _medicineCount += item.count;
             }
 
-            return Medicine > 0;
+            return _medicineCount > 0;
         }
 
         public void UseMedicine()
         {
-            for (int i = 0; i < items.Count; i++)
+            for (int i = 0; i < _items.Count; i++)
             {
-                if (items[i].isMedicine)
+                if (_items[i].isMedicine)
                 {
-                    items[i].count -= 1;
-                    items[i].itemGameObject.GetComponentInChildren<Text>().text =   items[i].count.ToString();
-                    Medicine--;
+                    _items[i].count -= 1;
+                    _items[i].itemGameObject.GetComponentInChildren<Text>().text =   _items[i].count.ToString();
+                    _medicineCount--;
                     
-                    if (items[i].count <= 0)
-                        AddItem(i, data.items[0], 0);
+                    if (_items[i].count <= 0)
+                        AddItem(i, _data.items[0], 0);
 
                     UpdateInventory();
                     return;
@@ -229,17 +224,17 @@ namespace InventoryContent
 
         public void DecreaseBullets()
         {
-            for (int i = 0; i < items.Count; i++)
+            for (int i = 0; i < _items.Count; i++)
             {
-                if (items[i].isBullets)
+                if (_items[i].isBullets)
                 {
-                    items[i].count -= 1;
-                    items[i].itemGameObject.GetComponentInChildren<Text>().text =   items[i].count.ToString();
+                    _items[i].count -= 1;
+                    _items[i].itemGameObject.GetComponentInChildren<Text>().text =   _items[i].count.ToString();
                     Bullets--;
                     BulletsValueChanged?.Invoke(Bullets);
                     
-                    if (items[i].count <= 0)
-                        AddItem(i, data.items[0], 0);
+                    if (_items[i].count <= 0)
+                        AddItem(i, _data.items[0], 0);
                     
                     UpdateInventory();
                     return;
@@ -249,7 +244,7 @@ namespace InventoryContent
 
         public void DeleteItem(int id)
         {
-            AddItem(id, data.items[0], 0);
+            AddItem(id, _data.items[0], 0);
             CheckBullets();
             UpdateInventory();
         }
@@ -257,45 +252,45 @@ namespace InventoryContent
 
         public void OnItemDragStart(int id)
         {
-            if (items[id].id == 0) return;
+            if (_items[id].id == 0) return;
 
-            currentID = id;
-            currentItem = CopyInventoryItem(items[currentID]);
-            movingObject.gameObject.SetActive(true);
-            movingObject.GetComponent<Image>().sprite = data.items[currentItem.id].img;
-            AddItem(currentID, data.items[0], 0);
-            isDragging = true;
+            _currentID = id;
+            _currentItem = CopyInventoryItem(_items[_currentID]);
+            _movingObject.gameObject.SetActive(true);
+            _movingObject.GetComponent<Image>().sprite = _data.Sprites[_currentItem.id];
+            AddItem(_currentID, _data.items[0], 0);
+            _isDragging = true;
         }
 
         public void OnItemDragEnd(int id)
         {
-            if (currentID != -1)
+            if (_currentID != -1)
             {
-                ItemInventory II = items[id];
+                ItemInventory II = _items[id];
 
-                if (currentItem.id != II.id)
+                if (_currentItem.id != II.id)
                 {
-                    AddInventoryItem(currentID, II);
-                    AddInventoryItem(id, currentItem);
+                    AddInventoryItem(_currentID, II);
+                    AddInventoryItem(id, _currentItem);
                 }
                 else
                 {
-                    if (II.count + currentItem.count <= 128)
+                    if (II.count + _currentItem.count <= _maxStackSize)
                     {
-                        II.count += currentItem.count;
+                        II.count += _currentItem.count;
                     }
                     else
                     {
-                        AddItem(currentID, data.items[II.id], II.count + currentItem.count - 128);
-                        II.count = 128;
+                        AddItem(_currentID, _data.items[II.id], II.count + _currentItem.count - _maxStackSize);
+                        II.count = _maxStackSize;
                     }
 
                     II.itemGameObject.GetComponentInChildren<Text>().text = II.count.ToString();
                 }
 
-                currentID = -1;
-                movingObject.gameObject.SetActive(false);
-                isDragging = false;
+                _currentID = -1;
+                _movingObject.gameObject.SetActive(false);
+                _isDragging = false;
                 
                 InventoryChanged?.Invoke();
             }
@@ -303,16 +298,16 @@ namespace InventoryContent
 
         public void OnItemClick(int id)
         {
-            if (items[id].id == 0)
+            if (_items[id].id == 0)
             {
-                Debug.Log(items[id].id);
+                Debug.Log(_items[id].id);
                 return;
             }
         }
 
         public bool CheckEmpty(int id)
         {
-            return items[id].id > 0;
+            return _items[id].id > 0;
         }
     }
 
