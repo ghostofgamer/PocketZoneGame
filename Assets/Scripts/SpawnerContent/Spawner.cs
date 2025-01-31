@@ -1,3 +1,4 @@
+using System.Collections;
 using EnemyContent;
 using InventoryContent;
 using UnityEngine;
@@ -14,23 +15,46 @@ namespace SpawnerContent
         [SerializeField] private Vector2 _spawnAreaMax;
 
         private Enemy _enemy;
-
+        private float _spawnDelay = 0.3f; 
+        
         private void Start()
         {
-            SpawnMonsters();
+            StartCoroutine(SpawnMonstersWithDelay());
         }
-
-        private void SpawnMonsters()
+        
+        private IEnumerator SpawnMonstersWithDelay()
         {
             for (int i = 0; i < _numberOfMonsters; i++)
             {
-                Vector2 randomPosition = new Vector2(
+                Vector3 randomPosition = new Vector3(
                     Random.Range(_spawnAreaMin.x, _spawnAreaMax.x),
-                    Random.Range(_spawnAreaMin.y, _spawnAreaMax.y));
+                    Random.Range(_spawnAreaMin.y, _spawnAreaMax.y),
+                    0);
 
                 _enemy = Instantiate(_monsterPrefab, randomPosition, Quaternion.identity);
                 _enemy.SetItem(_items[Random.Range(0, _items.Length)]);
+                yield return new WaitForSeconds(_spawnDelay); 
             }
         }
+        
+
+        /*private void c()
+        {
+            if (patrolPoints.Count == 0)
+                return;
+
+            agent.SetDestination(patrolPoints[currentPatrolIndex]);
+
+            int nextPatrolIndex;
+
+            do
+            {
+                nextPatrolIndex = Random.Range(0, patrolPoints.Count);
+            } while (nextPatrolIndex == currentPatrolIndex);
+
+            currentPatrolIndex = nextPatrolIndex;
+            // currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Count;
+            lastPatrolTime = 0f;
+        }*/
     }
 }

@@ -1,209 +1,172 @@
 using System.Collections.Generic;
-using System.Linq;
 using PlayerContent;
 using UnityEngine;
 using UnityEngine.AI;
 
-public class EnemyAI : MonoBehaviour
+namespace EnemyContent
 {
-    // [SerializeField] private Transform[] _patrolPoints;
-    [SerializeField] private Animator _animator;
-    [SerializeField] private int numberOfPatrolPoints = 5; 
-    [SerializeField] private float patrolPointGenerationRadius = 10f;
-    
-    private int _damage = 15;
-    public float viewDistance = 1f; // Расстояние обзора перед врагом
-    public float viewWidth = 0.5f; // Ширина области обзора
-    public float patrolSpeed = 2f; // Скорость патрулирования
-    public float chaseSpeed = 3.5f;
-    public Transform playerTransform;
-    private PlayerHealth _playerHealth;
-    public float patrolWaitTime = 5f;
-    public float attackRadius = 3f; // Радиус атаки
-    public float attackCooldown = 1f;
-
-    private int currentPatrolIndex = 0;
-    private NavMeshAgent agent;
-    private bool isChasing = false;
-    private float lastAttackTime = 0f;
-    private float lastPatrolTime = 0f;
-    private List<Vector3> patrolPoints = new List<Vector3>();
-    
-    private void Start()
+    public class EnemyAI : MonoBehaviour
     {
-        agent = GetComponent<NavMeshAgent>();
-        agent.updateUpAxis = false;
-        agent.updateRotation = false;
+        [SerializeField] private Animator _animator;
+        [SerializeField] private int _numberOfPatrolPoints = 5; 
+        [SerializeField] private float _patrolPointGenerationRadius = 3f;
+        [SerializeField] private float _viewDistance = 4f;
+        [SerializeField] private float _viewWidth = 6f; 
+        [SerializeField] private float _patrolSpeed = 1.65f; 
+        [SerializeField] private float _chaseSpeed = 3f;
         
-        GeneratePatrolPoints();
-        SetNextPatrolPoint();
-    }
-
-    private void Update()
-    {
-        
-        if (isChasing)
+        private int _damage = 15;
+        private float _patrolWaitTime = 1.5f;
+        private float _attackRadius = 1.5f; 
+        private float _attackCooldown = 1f;
+        private PlayerHealth _playerHealth;
+        private Transform _playerTransform;
+        private int _currentPatrolIndex = 0;
+        private NavMeshAgent _agent;
+        private bool _isChasing = false;
+        private float _lastAttackTime = 0f;
+        private float _lastPatrolTime = 0f;
+        private List<Vector3> _patrolPoints = new List<Vector3>();
+    
+        private void Start()
         {
-            agent.speed = chaseSpeed;
-            agent.SetDestination(playerTransform.position);
-            _animator.SetBool("Walking", true);
-            
-            if (!CanSeePlayer())
-            {
-                _animator.SetBool("Attack", false);
-                isChasing = false;
-                agent.speed = patrolSpeed;
-                SetNextPatrolPoint();
-            }
-            
-            if (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius)
-            {
-                AttackPlayer();
-            }
+            _agent = GetComponent<NavMeshAgent>();
+            _agent.updateUpAxis = false;
+            _agent.updateRotation = false;
+        
+            GeneratePatrolPoints();
+            SetNextPatrolPoint();
         }
-        else
-        {
-            agent.speed = patrolSpeed;
 
-            if (!agent.pathPending && agent.remainingDistance < 0.1f)
+        private void Update()
+        {
+            if (_isChasing)
             {
-                if (lastPatrolTime == 0f)
+                _agent.speed = _chaseSpeed;
+                _agent.SetDestination(_playerTransform.position);
+                _animator.SetBool("Walking", true);
+            
+                if (!CanSeePlayer())
                 {
-                    lastPatrolTime = Time.time;
-                }
-                
-                if (Time.time - lastPatrolTime >= patrolWaitTime)
-                {
+                    _animator.SetBool("Attack", false);
+                    _isChasing = false;
+                    _agent.speed = _patrolSpeed;
                     SetNextPatrolPoint();
                 }
-                else
+            
+                if (Vector2.Distance(transform.position, _playerTransform.position) <= _attackRadius)
                 {
-                    _animator.SetBool("Walking", false);
+                    AttackPlayer();
                 }
             }
             else
             {
-                _animator.SetBool("Walking", true);
+                _agent.speed = _patrolSpeed;
+
+                if (!_agent.pathPending && _agent.remainingDistance < 0.3f)
+                {
+                    
+                    Debug.Log("Patrolling");
+                    if (_lastPatrolTime == 0f)
+                        _lastPatrolTime = Time.time;
+                
+                    if (Time.time - _lastPatrolTime >= _patrolWaitTime)
+                        SetNextPatrolPoint();
+                    else
+                        _animator.SetBool("Walking", false);
+                }
+                else
+                {
+                    Debug.Log("Walking");
+                    _animator.SetBool("Walking", true);
+                }
+
+                if (CanSeePlayer())
+                    _isChasing = true;
             }
 
-            if (CanSeePlayer())
-            {
-                isChasing = true;
-                // _animator.SetBool("Attack", true);
-            }
+            CheckDirection();
         }
 
-        CheckDirection();
-    }
-
-    void AttackPlayer()
-    {
-        if (Time.time - lastAttackTime >= attackCooldown)
+        private void AttackPlayer()
         {
-            _animator.SetBool("Attack", true);
+            if (Time.time - _lastAttackTime >= _attackCooldown)
+            {
+                _animator.SetBool("Attack", true);
         
-            if (_playerHealth != null)
-                _playerHealth.TakeDamage(_damage);
-            lastAttackTime = Time.time;
+                if (_playerHealth != null)
+                    _playerHealth.TakeDamage(_damage);
+                
+                _lastAttackTime = Time.time;
+            }
         }
-    }
     
-    void GeneratePatrolPoints()
-    {
-        patrolPoints.Clear();
-
-        float angleIncrement = 360f / numberOfPatrolPoints;
-
-        for (int i = 0; i < numberOfPatrolPoints; i++)
+        private void GeneratePatrolPoints()
         {
-            float angle = i * angleIncrement * Mathf.Deg2Rad;
-            Vector3 pointOnCircle = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * patrolPointGenerationRadius;
-            Vector3 randomPoint = transform.position + pointOnCircle;
+            _patrolPoints.Clear();
 
-            NavMeshHit hit;
+            float angleIncrement = 360f / _numberOfPatrolPoints;
 
-            if (NavMesh.SamplePosition(randomPoint, out hit, patrolPointGenerationRadius, NavMesh.AllAreas))
+            for (int i = 0; i < _numberOfPatrolPoints; i++)
             {
-                patrolPoints.Add(hit.position);
+                float angle = i * angleIncrement * Mathf.Deg2Rad;
+                Vector3 pointOnCircle = new Vector3(Mathf.Cos(angle), Mathf.Sin(angle), 0) * _patrolPointGenerationRadius;
+                Vector3 randomPoint = transform.position + pointOnCircle;
+                NavMeshHit hit;
+
+                if (NavMesh.SamplePosition(randomPoint, out hit, _patrolPointGenerationRadius, NavMesh.AllAreas))
+                    _patrolPoints.Add(hit.position);
             }
+            
+            ShufflePatrolPoints();
         }
-        
-        
-        
-        /*for (int i = 0; i < numberOfPatrolPoints; i++)
-        {
-            Vector3 randomPoint = transform.position + Random.insideUnitSphere * patrolPointGenerationRadius;
-            randomPoint.z = 0;
-            
-            NavMeshHit hit;
-            
-            if (NavMesh.SamplePosition(randomPoint, out hit, patrolPointGenerationRadius, NavMesh.AllAreas))
-            {
-                patrolPoints.Add(hit.position);
-            }
-        }*/
-    }
     
-    void OnDrawGizmos()
-    {
-        Gizmos.color = Color.red;
-        
-        foreach (var point in patrolPoints)
+        private void ShufflePatrolPoints()
         {
-            Gizmos.DrawSphere(point, 0.5f);
-        }
-    }
-
-    bool CanSeePlayer()
-    {
-        Vector2 origin = (Vector2)transform.position + (Vector2)transform.right * viewDistance * 0.5f;
-        Collider2D[] hits = Physics2D.OverlapBoxAll(origin, new Vector2(viewWidth, viewDistance), 0);
-
-        foreach (Collider2D hit in hits)
-        {
-            if (hit.gameObject.TryGetComponent(out PlayerHealth player))
+            for (int i = 0; i < _patrolPoints.Count; i++)
             {
-                playerTransform = player.transform;
-                _playerHealth = player;
-                return true;
+                Vector3 temp = _patrolPoints[i];
+                int randomIndex = Random.Range(i, _patrolPoints.Count);
+                _patrolPoints[i] = _patrolPoints[randomIndex];
+                _patrolPoints[randomIndex] = temp;
             }
         }
 
-        _playerHealth = null;
-        return false;
-    }
-
-    void SetNextPatrolPoint()
-    {
-        if (patrolPoints.Count == 0)
-            return;
-        
-        agent.SetDestination(patrolPoints[currentPatrolIndex]);
-
-        /*
-        while ()
+        private bool CanSeePlayer()
         {
-            
-        }*/
-        
-        currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Count;
-        lastPatrolTime = 0f;
-    }
+            Vector2 origin = (Vector2)transform.position + (Vector2)transform.right * _viewDistance * 0.5f;
+            Collider2D[] hits = Physics2D.OverlapBoxAll(origin, new Vector2(_viewWidth, _viewDistance), 0);
 
-    void OnDrawGizmosSelected()
-    {
-        Gizmos.color = Color.red;
-        Vector2 origin = (Vector2)transform.position + (Vector2)transform.right * viewDistance * 0.5f;
-        Gizmos.DrawWireCube(origin, new Vector3(viewWidth, viewDistance, 0));
-    }
+            foreach (Collider2D hit in hits)
+            {
+                if (hit.gameObject.TryGetComponent(out PlayerHealth player))
+                {
+                    _playerTransform = player.transform;
+                    _playerHealth = player;
+                    return true;
+                }
+            }
 
-    void CheckDirection()
-    {
-        // Debug.Log("Velocity   " + agent.velocity.x);
+            _playerHealth = null;
+            return false;
+        }
+
+        private void SetNextPatrolPoint()
+        {
+            if (_patrolPoints.Count == 0)
+                return;
         
-        if (agent.velocity.x > 0)
-            transform.rotation = Quaternion.Euler(0, 0, 0);
-        else if (agent.velocity.x < 0)
-            transform.rotation = Quaternion.Euler(0, 180, 0);
+            _agent.SetDestination(_patrolPoints[_currentPatrolIndex]);
+            _currentPatrolIndex = (_currentPatrolIndex + 1) % _patrolPoints.Count;
+            _lastPatrolTime = 0f;
+        }
+
+        private void CheckDirection()
+        {
+            if (_agent.velocity.x > 0)
+                transform.rotation = Quaternion.Euler(0, 0, 0);
+            else if (_agent.velocity.x < 0)
+                transform.rotation = Quaternion.Euler(0, 180, 0);
+        }
     }
 }
