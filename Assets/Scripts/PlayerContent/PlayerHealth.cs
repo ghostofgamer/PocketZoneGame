@@ -25,13 +25,10 @@ namespace PlayerContent
 
             if (saveData != null)
             {
-                Debug.Log("Loading data HeaLTRH " + saveData.health);
                 _currentHealth = saveData.health;
 
                 if (saveData.health == 0)
-                {
                     _currentHealth = _maxHealth;
-                }
             }
             else
             {
@@ -45,6 +42,7 @@ namespace PlayerContent
         public void TakeDamage(int damage)
         {
             if (damage <= 0) return;
+            
             _currentHealth -= damage;
             HealthChanged?.Invoke();
 
@@ -63,7 +61,6 @@ namespace PlayerContent
             _currentHealth = _maxHealth;
             HealthChanged?.Invoke();
             _healthBar.SetHealth(_currentHealth, _maxHealth);
-            // _storage.SaveGame();
             _storage.SavePlayerHealth();
         }
 

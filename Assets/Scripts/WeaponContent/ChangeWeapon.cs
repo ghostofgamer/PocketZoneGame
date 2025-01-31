@@ -1,3 +1,4 @@
+using PlayerContent;
 using UnityEngine;
 
 namespace WeaponContent

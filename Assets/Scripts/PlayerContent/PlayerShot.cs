@@ -1,22 +1,25 @@
 using UnityEngine;
 using WeaponContent;
 
-public class PlayerShot : MonoBehaviour
+namespace PlayerContent
 {
-    [SerializeField] private Inventory _inventory;
+    public class PlayerShot : MonoBehaviour
+    {
+        [SerializeField] private Inventory _inventory;
     
-    private Gun _currentGun;
+        private Gun _currentGun;
 
-    public void SetGun(Gun gun)
-    {
-        _currentGun = gun;
-    }
+        public void SetGun(Gun gun)
+        {
+            _currentGun = gun;
+        }
     
-    public void Shot()
-    {
-        if (_inventory.Bullets <= 0) return;
+        public void Shot()
+        {
+            if (_inventory.Bullets <= 0) return;
         
-        _currentGun.Shot();
-        _inventory.DecreaseBullets();
+            _currentGun.Shot();
+            _inventory.DecreaseBullets();
+        }
     }
 }

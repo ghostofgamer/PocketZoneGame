@@ -1,21 +1,22 @@
 using UnityEngine;
 
-public class PlayerAnimation : MonoBehaviour
+namespace PlayerContent
 {
-    [SerializeField] private Animator _animator;
-
-    public void SetIndexWeapon(int index)
+    public class PlayerAnimation : MonoBehaviour
     {
-        _animator.SetInteger("IndexWeapon", index);
-    }
-    
-    public void PlayWalk()
-    {
+        private const string Speed = "Speed";
+        private const string IndexWeapon = "IndexWeapon";
         
-    }
+        [SerializeField] private Animator _animator;
 
-    public void PlayIdle()
-    {
-        
+        public void SetIndexWeapon(int index)
+        {
+            _animator.SetInteger(IndexWeapon, index);
+        }
+
+        public void PlayMovementSpeed(float movementSpeed)
+        {
+            _animator.SetFloat(Speed, movementSpeed);
+        }
     }
 }
