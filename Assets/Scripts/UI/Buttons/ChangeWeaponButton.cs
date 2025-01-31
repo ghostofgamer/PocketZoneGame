@@ -1,13 +1,12 @@
-using UI.Buttons;
 using UnityEngine;
 using WeaponContent;
 
-public class ChangeWeaponButton : AbstractButton
+namespace UI.Buttons
 {
-    [SerializeField] private ChangeWeapon _changeWeapon; 
-    
-    protected override void OnClick()
+    public class ChangeWeaponButton : AbstractButton
     {
-      _changeWeapon.Change();
+        [SerializeField] private ChangeWeapon _changeWeapon;
+
+        protected override void OnClick() => _changeWeapon.Change();
     }
 }

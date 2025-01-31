@@ -1,23 +1,26 @@
 using TMPro;
 using UnityEngine;
 
-public class BulletsViewer : MonoBehaviour
+namespace UI
 {
-    [SerializeField] private TMP_Text _bulletText;
-    [SerializeField]private Inventory _inventory;
-
-    private void OnEnable()
+    public class BulletsViewer : MonoBehaviour
     {
-        _inventory.BulletsValueChanged += Show;
-    }
+        [SerializeField] private TMP_Text _bulletText;
+        [SerializeField]private Inventory _inventory;
 
-    private void OnDisable()
-    {
-        _inventory.BulletsValueChanged -= Show;
-    }
+        private void OnEnable()
+        {
+            _inventory.BulletsValueChanged += Show;
+        }
 
-    public void Show(int value)
-    {
-        _bulletText.text = value.ToString();
+        private void OnDisable()
+        {
+            _inventory.BulletsValueChanged -= Show;
+        }
+
+        private void Show(int value)
+        {
+            _bulletText.text = value.ToString();
+        }
     }
 }

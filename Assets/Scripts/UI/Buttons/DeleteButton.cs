@@ -1,13 +1,15 @@
-using UI.Buttons;
 using UnityEngine;
 
-public class DeleteButton : AbstractButton
+namespace UI.Buttons
 {
-    [SerializeField]private ItemDrag _itemDrag;
-    
-    protected override void OnClick()
+    public class DeleteButton : AbstractButton
     {
-        _itemDrag.Inventory.DeleteItem(_itemDrag.ID);
-        gameObject.SetActive(false);
+        [SerializeField]private ItemDrag _itemDrag;
+    
+        protected override void OnClick()
+        {
+            _itemDrag.Inventory.DeleteItem(_itemDrag.ID);
+            gameObject.SetActive(false);
+        }
     }
 }

@@ -1,12 +1,11 @@
-using UI.Buttons;
 using UnityEngine;
 
-public class InventoryButton : AbstractButton
+namespace UI.Buttons
 {
-    [SerializeField] private Inventory _inventory;
-    
-    protected override void OnClick()
+    public class InventoryButton : AbstractButton
     {
-        _inventory.ChangeActivatedInventory();
+        [SerializeField] private Inventory _inventory;
+
+        protected override void OnClick() => _inventory.ChangeActivatedInventory();
     }
 }

@@ -10,7 +10,6 @@ namespace UI.Buttons
 
         protected override void OnClick()
         {
-            Debug.Log("HealButton clicked");
             if (_inventory.CheckHeal())
             {
                 _inventory.UseMedicine();
