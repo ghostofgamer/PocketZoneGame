@@ -1,4 +1,5 @@
 using System;
+using InventoryContent;
 using UnityEngine;
 using UnityEngine.EventSystems;
 

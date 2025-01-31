@@ -1,6 +1,7 @@
 using System;
 using HealthBarContent;
 using Interfaces;
+using InventoryContent;
 using SaveDataContent;
 using UnityEngine;
 
@@ -36,7 +37,7 @@ namespace PlayerContent
             }
 
             _healthBar.SetHealth(_currentHealth, _maxHealth);
-            _storage.SavePlayerHealth();
+            HealthChanged?.Invoke();
         }
 
         public void TakeDamage(int damage)
@@ -44,7 +45,7 @@ namespace PlayerContent
             if (damage <= 0) return;
             
             _currentHealth -= damage;
-            HealthChanged?.Invoke();
+          
 
             if (_currentHealth <= 0)
             {
@@ -53,7 +54,7 @@ namespace PlayerContent
             }
 
             _healthBar.SetHealth(_currentHealth, _maxHealth);
-            _storage.SavePlayerHealth();
+              HealthChanged?.Invoke();
         }
 
         public void Healing()
@@ -61,7 +62,6 @@ namespace PlayerContent
             _currentHealth = _maxHealth;
             HealthChanged?.Invoke();
             _healthBar.SetHealth(_currentHealth, _maxHealth);
-            _storage.SavePlayerHealth();
         }
 
         private void Die()

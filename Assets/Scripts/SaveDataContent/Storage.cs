@@ -1,134 +1,97 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using InventoryContent;
 using PlayerContent;
-using SaveDataContent;
 using UnityEngine;
 
-public class Storage : MonoBehaviour
+namespace SaveDataContent
 {
-    [SerializeField] private PlayerHealth _playerHealth;
-    [SerializeField] private Inventory _inventory;
-
-    private string filePath;
-
-    private void OnEnable()
+    public class Storage : MonoBehaviour
     {
-        _playerHealth.HealthChanged += SavePlayerHealth;
-    }
+        [SerializeField] private PlayerHealth _playerHealth;
+        [SerializeField] private Inventory _inventory;
 
-    private void OnDisable()
-    {
-        _playerHealth.HealthChanged -= SavePlayerHealth;
-    }
+        private string filePath;
 
-    private void Start()
-    {
-        filePath = Path.Combine(Application.persistentDataPath, "saveData.json");
-    }
+        private void OnEnable()
+        {
+            _playerHealth.HealthChanged += SavePlayerHealth;
+            _inventory.InventoryChanged += SaveInventory;
+        }
 
-    /*public void SaveGame()
-    {
-        StartCoroutine(SaveDataInfo());
-    }*/
+        private void OnDisable()
+        {
+            _playerHealth.HealthChanged -= SavePlayerHealth;
+            _inventory.InventoryChanged -= SaveInventory;
+        }
 
-    public void SaveInventory()
-    {
-        StartCoroutine(SaveInventoryData());
-    }
+        private void Start()
+        {
+            filePath = Path.Combine(Application.persistentDataPath, "saveData.json");
+        }
 
-    public void SavePlayerHealth()
-    {
-        StartCoroutine(SavePlayerHealthData());
-    }
+        private void SaveInventory()
+        {
+            StartCoroutine(SaveInventoryData());
+        }
 
-
-    public IEnumerator SavePlayerHealthData()
-    {
-        SaveData saveData = LoadDataInfo();
+        private void SavePlayerHealth()
+        {
+            StartCoroutine(SavePlayerHealthData());
+        }
         
-        if (saveData == null)
-            saveData = new SaveData();
+        private IEnumerator SavePlayerHealthData()
+        {
+            SaveData saveData = CreateSaveData();
+            saveData.health = _playerHealth.Health;
+            SaveData(saveData);
+            yield return null;
+        }
+
+        private IEnumerator SaveInventoryData()
+        {
+            SaveData saveData = CreateSaveData();
+            saveData.items = new List<ItemData>(_inventory.items.Count);
+
+            for (int i = 0; i < _inventory.items.Count; i++)
+                saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
+
+            SaveData(saveData);
+            yield return null;
+        }
+
+        public SaveData LoadDataInfo()
+        {
+            if (File.Exists(filePath))
+            {
+                string jsonData = File.ReadAllText(filePath);
+                return JsonUtility.FromJson<SaveData>(jsonData);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        private SaveData CreateSaveData()
+        {
+            SaveData saveData = LoadDataInfo() ?? new SaveData();
+            return saveData;
+        }
         
-        saveData.health = _playerHealth.Health;
-
-        Debug.Log("Health " + saveData.health);
-        string jsonData = JsonUtility.ToJson(saveData, true);
-        File.WriteAllText(filePath, jsonData);
-        yield return null;
-    }
-
-    public IEnumerator SaveInventoryData()
-    {
-        SaveData saveData = LoadDataInfo();
-
-        if (saveData == null)
-            saveData = new SaveData();
-
-        saveData.items = new List<ItemData>(_inventory.items.Count);
-
-        for (int i = 0; i < _inventory.items.Count; i++)
+        private void SaveData(SaveData saveData)
         {
-            saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
+            string jsonData = JsonUtility.ToJson(saveData, true);
+            File.WriteAllText(filePath, jsonData);
         }
-
-        string jsonData = JsonUtility.ToJson(saveData, true);
-        File.WriteAllText(filePath, jsonData);
-        yield return null;
-    }
-
-
-    /*public IEnumerator SaveDataInfo()
-    {
-        SaveData saveData = new SaveData
+        
+        public void ClearSaveData()
         {
-            items = new List<ItemData>(_inventory.items.Count)
-        };
-
-        for (int i = 0; i < _inventory.items.Count; i++)
-        {
-            saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
-        }
-
-        // foreach (var item in saveData.items)
-        // {
-        //     Debug.Log(item.id + "  ,,,  "  + item.idPosition + "   ...     " + item.count  );
-        // }
-
-        saveData.health = _playerHealth.Health;
-
-        Debug.Log("Health " +  saveData.health);
-        string jsonData = JsonUtility.ToJson(saveData, true);
-        // Debug.Log("Saving data: " + jsonData);
-        File.WriteAllText(filePath, jsonData);
-        yield return null;
-    }*/
-
-    public SaveData LoadDataInfo()
-    {
-        if (File.Exists(filePath))
-        {
-            string jsonData = File.ReadAllText(filePath);
-            Debug.Log("Loading data: " + jsonData);
-            return JsonUtility.FromJson<SaveData>(jsonData);
-        }
-        else
-        {
-            return null;
-        }
-    }
-
-    public void ClearSaveData()
-    {
-        if (File.Exists(filePath))
-        {
-            File.Delete(filePath);
-            Debug.Log("Save data file deleted.");
-        }
-        else
-        {
-            Debug.Log("Save data file does not exist.");
+            if (File.Exists(filePath))
+                File.Delete(filePath);
+            else
+                Debug.Log("Save data file does not exist.");
         }
     }
 }

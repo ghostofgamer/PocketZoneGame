@@ -1,3 +1,4 @@
+using InventoryContent;
 using PlayerContent;
 using UnityEngine;
 
