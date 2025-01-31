@@ -13,4 +13,5 @@ public class Item
     public string name;
     public Sprite img;
     public bool isBullets;
+    public bool isMedicine;
 }

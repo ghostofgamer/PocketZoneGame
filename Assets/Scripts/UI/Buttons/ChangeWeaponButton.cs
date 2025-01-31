@@ -1,5 +1,6 @@
 using UI.Buttons;
 using UnityEngine;
+using WeaponContent;
 
 public class ChangeWeaponButton : AbstractButton
 {

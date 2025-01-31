@@ -9,18 +9,18 @@ using UnityEngine;
 public class Storage : MonoBehaviour
 {
     [SerializeField] private PlayerHealth _playerHealth;
-    [SerializeField]private Inventory _inventory;
-    
+    [SerializeField] private Inventory _inventory;
+
     private string filePath;
 
     private void OnEnable()
     {
-        _playerHealth.HealthChanged += SaveGame;
+        _playerHealth.HealthChanged += SavePlayerHealth;
     }
 
     private void OnDisable()
     {
-        _playerHealth.HealthChanged -= SaveGame;
+        _playerHealth.HealthChanged -= SavePlayerHealth;
     }
 
     private void Start()
@@ -28,13 +28,58 @@ public class Storage : MonoBehaviour
         filePath = Path.Combine(Application.persistentDataPath, "saveData.json");
     }
 
-    public void SaveGame()
+    /*public void SaveGame()
     {
         StartCoroutine(SaveDataInfo());
+    }*/
+
+    public void SaveInventory()
+    {
+        StartCoroutine(SaveInventoryData());
     }
-    
-    
-    public IEnumerator SaveDataInfo()
+
+    public void SavePlayerHealth()
+    {
+        StartCoroutine(SavePlayerHealthData());
+    }
+
+
+    public IEnumerator SavePlayerHealthData()
+    {
+        SaveData saveData = LoadDataInfo();
+        
+        if (saveData == null)
+            saveData = new SaveData();
+        
+        saveData.health = _playerHealth.Health;
+
+        Debug.Log("Health " + saveData.health);
+        string jsonData = JsonUtility.ToJson(saveData, true);
+        File.WriteAllText(filePath, jsonData);
+        yield return null;
+    }
+
+    public IEnumerator SaveInventoryData()
+    {
+        SaveData saveData = LoadDataInfo();
+
+        if (saveData == null)
+            saveData = new SaveData();
+
+        saveData.items = new List<ItemData>(_inventory.items.Count);
+
+        for (int i = 0; i < _inventory.items.Count; i++)
+        {
+            saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
+        }
+
+        string jsonData = JsonUtility.ToJson(saveData, true);
+        File.WriteAllText(filePath, jsonData);
+        yield return null;
+    }
+
+
+    /*public IEnumerator SaveDataInfo()
     {
         SaveData saveData = new SaveData
         {
@@ -45,20 +90,20 @@ public class Storage : MonoBehaviour
         {
             saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
         }
-     
-        foreach (var item in saveData.items)
-        {
-            Debug.Log(item.id + "  ,,,  "  + item.idPosition + "   ...     " + item.count  );
-        }
-        
+
+        // foreach (var item in saveData.items)
+        // {
+        //     Debug.Log(item.id + "  ,,,  "  + item.idPosition + "   ...     " + item.count  );
+        // }
+
         saveData.health = _playerHealth.Health;
-        
+
         Debug.Log("Health " +  saveData.health);
         string jsonData = JsonUtility.ToJson(saveData, true);
-        Debug.Log("Saving data: " + jsonData);
+        // Debug.Log("Saving data: " + jsonData);
         File.WriteAllText(filePath, jsonData);
         yield return null;
-    }
+    }*/
 
     public SaveData LoadDataInfo()
     {
@@ -73,7 +118,7 @@ public class Storage : MonoBehaviour
             return null;
         }
     }
-    
+
     public void ClearSaveData()
     {
         if (File.Exists(filePath))
@@ -86,53 +131,4 @@ public class Storage : MonoBehaviour
             Debug.Log("Save data file does not exist.");
         }
     }
-    
-    
-    
-    
-    
-    /*private const string StorageSave = "StorageSave";
-
-    [SerializeField] private Inventory _inventory;
-
-    private Coroutine _coroutine;
-
-    public void LoadDataInfo()
-    {
-        SaveData saveData = new SaveData();
-
-        if (PlayerPrefs.HasKey(StorageSave))
-        {
-            string jsonData = PlayerPrefs.GetString(StorageSave);
-            saveData = JsonUtility.FromJson<SaveData>(jsonData);
-        }
-        else
-        {
-            return;
-        }
-    }
-
-    public void OnSaveChanges()
-    {
-        if (_coroutine != null)
-            StopCoroutine(_coroutine);
-
-        _coroutine = StartCoroutine(SaveDataInfo());
-    }
-
-    private IEnumerator SaveDataInfo()
-    {
-        SaveData saveData = new SaveData();
-        saveData.items = new List<ItemData>();
-
-        for (int i = 0; i < _inventory.items.Count; i++)
-        {
-            saveData.items.Add(new ItemData(_inventory.items[i].id, _inventory.items[i].count, i));
-        }
-        
-        string jsonData = JsonUtility.ToJson(saveData);
-        PlayerPrefs.SetString(StorageSave, jsonData);
-        PlayerPrefs.Save();
-        yield return null;
-    }*/
 }

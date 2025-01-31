@@ -11,6 +11,7 @@ namespace PlayerContent
         [SerializeField] private HealthBar _healthBar;
         [SerializeField] private int _maxHealth = 100;
         [SerializeField] private Storage _storage;
+        [SerializeField] private Inventory _inventory;
 
         private int _currentHealth;
 
@@ -24,7 +25,13 @@ namespace PlayerContent
 
             if (saveData != null)
             {
+                Debug.Log("Loading data HeaLTRH " + saveData.health);
                 _currentHealth = saveData.health;
+
+                if (saveData.health == 0)
+                {
+                    _currentHealth = _maxHealth;
+                }
             }
             else
             {
@@ -32,6 +39,7 @@ namespace PlayerContent
             }
 
             _healthBar.SetHealth(_currentHealth, _maxHealth);
+            _storage.SavePlayerHealth();
         }
 
         public void TakeDamage(int damage)
@@ -47,6 +55,16 @@ namespace PlayerContent
             }
 
             _healthBar.SetHealth(_currentHealth, _maxHealth);
+            _storage.SavePlayerHealth();
+        }
+
+        public void Healing()
+        {
+            _currentHealth = _maxHealth;
+            HealthChanged?.Invoke();
+            _healthBar.SetHealth(_currentHealth, _maxHealth);
+            // _storage.SaveGame();
+            _storage.SavePlayerHealth();
         }
 
         private void Die()

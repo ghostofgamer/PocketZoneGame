@@ -1,20 +1,15 @@
 using UnityEngine;
 
-public class Gun : MonoBehaviour
+namespace WeaponContent
 {
-    [SerializeField] private Bullet _bullet;
-    [SerializeField] private Transform _container;
-    [SerializeField] private Transform _shotPosition;
-    private void Update()
+    public class Gun : MonoBehaviour
     {
-        if (Input.GetKeyDown(KeyCode.Space))
-        {
-            Shot();
-        }
-    }
+        [SerializeField] private Transform _shotPosition;
+        [SerializeField] private BulletContainer _bulletContainer;
 
-    public void Shot()
-    {
-         Instantiate(_bullet, _shotPosition.position, _shotPosition.rotation, _container);
+        public void Shot()
+        {
+            _bulletContainer.GetBullet(_shotPosition);
+        }
     }
 }

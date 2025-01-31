@@ -1,30 +1,19 @@
-using System;
 using Interfaces;
 using UnityEngine;
 
-public class BulletTrigger : MonoBehaviour
+namespace WeaponContent.Bullets
 {
-    [SerializeField] private int _damage;
-
-    private void OnTriggerEnter2D(Collider2D other)
+    public class BulletTrigger : MonoBehaviour
     {
-        if (other.gameObject.TryGetComponent(out IDamageable damageable))
+        [SerializeField] private int _damage;
+
+        private void OnTriggerEnter2D(Collider2D other)
         {
-            Debug.Log("Damage triggered");
-            damageable.TakeDamage(_damage);
-            gameObject.SetActive(false);
+            if (other.gameObject.TryGetComponent(out IDamageable damageable))
+            {
+                damageable.TakeDamage(_damage);
+                gameObject.SetActive(false);
+            }
         }
     }
-
-    /*private void OnCollisionEnter2D(Collision2D other)
-    {
-        Debug.Log(other.gameObject.name);
-        
-        if (other.gameObject.TryGetComponent(out IDamageable damageable))
-        {
-            Debug.Log("Damage triggered");
-            damageable.TakeDamage(_damage);
-            gameObject.SetActive(false);
-        }
-    }*/
 }

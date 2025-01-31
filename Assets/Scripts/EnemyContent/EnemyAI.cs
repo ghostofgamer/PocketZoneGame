@@ -40,7 +40,6 @@ public class EnemyAI : MonoBehaviour
 
     private void Update()
     {
-        // Debug.Log(Time.time - lastPatrolTime>= patrolWaitTime);
         
         if (isChasing)
         {
@@ -55,8 +54,6 @@ public class EnemyAI : MonoBehaviour
                 agent.speed = patrolSpeed;
                 SetNextPatrolPoint();
             }
-
-            // Debug.Log("Chasing "+  (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius));
             
             if (Vector2.Distance(transform.position, playerTransform.position) <= attackRadius)
             {
@@ -115,7 +112,10 @@ public class EnemyAI : MonoBehaviour
         for (int i = 0; i < numberOfPatrolPoints; i++)
         {
             Vector3 randomPoint = transform.position + Random.insideUnitSphere * patrolPointGenerationRadius;
+            randomPoint.z = 0;
+            
             NavMeshHit hit;
+            
             if (NavMesh.SamplePosition(randomPoint, out hit, patrolPointGenerationRadius, NavMesh.AllAreas))
             {
                 patrolPoints.Add(hit.position);
@@ -144,21 +144,14 @@ public class EnemyAI : MonoBehaviour
 
     void SetNextPatrolPoint()
     {
+        // Debug.Log("Next Patrol Point");
+        
         if (patrolPoints.Count == 0)
             return;
-
+        // Debug.Log("Next!!!");
         agent.SetDestination(patrolPoints[currentPatrolIndex]);
         currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Count;
         lastPatrolTime = 0f;
-        
-        
-        
-        /*if (_patrolPoints.Length == 0)
-            return;
-
-        agent.SetDestination(_patrolPoints[currentPatrolIndex].position);
-        currentPatrolIndex = (currentPatrolIndex + 1) % _patrolPoints.Length;
-        lastPatrolTime = 0f;*/
     }
 
     void OnDrawGizmosSelected()
@@ -170,6 +163,8 @@ public class EnemyAI : MonoBehaviour
 
     void CheckDirection()
     {
+        // Debug.Log("Velocity   " + agent.velocity.x);
+        
         if (agent.velocity.x > 0)
             transform.rotation = Quaternion.Euler(0, 0, 0);
         else if (agent.velocity.x < 0)

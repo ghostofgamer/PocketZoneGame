@@ -1,11 +1,20 @@
 using UnityEngine;
 
-public class Bullet : MonoBehaviour
+namespace WeaponContent.Bullets
 {
-    [SerializeField] private float _speed;
-
-    private void Update()
+    public class Bullet : MonoBehaviour
     {
-        transform.Translate(Vector3.up * _speed * Time.deltaTime);
+        [SerializeField] private float _speed;
+
+        private void Update()
+        {
+            transform.Translate(Vector3.up * _speed * Time.deltaTime);
+        }
+
+        public void Init(Vector3 position, Quaternion rotation)
+        {
+            transform.position = position;
+            transform.rotation = rotation;
+        }
     }
 }

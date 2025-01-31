@@ -30,6 +30,7 @@ public class Inventory : MonoBehaviour
     public event Action<int> BulletsValueChanged;
 
     public int Bullets { get; private set; }
+    public int Medicine { get; private set; }
 
     private bool isDragging = false;
     private Vector2 mouseDownPosition;
@@ -37,8 +38,6 @@ public class Inventory : MonoBehaviour
 
     private void Start()
     {
-        // LoadInventoryFromFile("path/to/savefile.json");
-
         if (items.Count == 0)
         {
             AddGraphics();
@@ -52,48 +51,10 @@ public class Inventory : MonoBehaviour
             {
                 if (item.id > 0)
                     AddItem(item.idPosition,data.items[item.id],item.count);
-               /*items[item.id]*/
             }
-            
-            
-            /*if(save)
-            
-            for (int i = 0; i < save.items.Count; i++)
-            {
-                items[0].
-            }*/
         }
-
-        /*
-        for (int i = 0; i < maxCount; i++)
-        {
-            // AddItem(i, data.items[0], 0);
-
-            AddItem(i, data.items[Random.Range(0, data.items.Count)], Random.Range(0, 99));
-        }
-        */
-
         UpdateInventory();
         CheckBullets();
-        // _storage.SaveGame(items);
-        
-        
-        
-        /*SaveData save = _storage.LoadDataInfo();
-        
-        if (save != null)
-        {
-            Debug.Log("Data loaded:");
-
-            foreach (var item in save.items)
-            {
-                Debug.Log($"ID: {item.id}, Position: {item.idPosition}, Count: {item.count}");
-            }
-        }
-        else
-        {
-            Debug.Log("No saved data found.");
-        }*/
     }
 
     public void Add(ItemPickUp itemPickUp, int id, int count)
@@ -138,50 +99,12 @@ public class Inventory : MonoBehaviour
         if (backGround.activeSelf)
             UpdateInventory();
     }
-
-    /*public void SearchForSameItem(Item item, int count)
-    {
-        for (int i = 0; i < maxCount; i++)
-        {
-            if (items[i].id == item.id)
-            {
-                if (items[i].count < 128)
-                {
-                    items[i].count += count;
-
-                    if (items[i].count > 128)
-                    {
-                        count = items[i].count - 128;
-                        items[i].count = 64;
-                    }
-                    else
-                    {
-                        count = 0;
-                        i = maxCount;
-                    }
-                }
-            }
-        }
-
-        if (count > 0)
-        {
-            for (int i = 0; i < maxCount; i++)
-            {
-                if (items[i].id == 0)
-                {
-                    AddItem(i, item, count);
-                    i = maxCount;
-                }
-            }
-        }
-    }*/
-
+    
     public void AddItem(int id, Item item, int count)
     {
         items[id].id = item.id;
         items[id].count = count;
         items[id].itemGameObject.GetComponent<Image>().sprite = item.img;
-        // items[id].itemGameObject.GetComponent<Image>().sprite = data.items[item.id].img;
 
         if (count > 1 && item.id != 0)
         {
@@ -193,7 +116,8 @@ public class Inventory : MonoBehaviour
         }
 
         UpdateInventory();
-        _storage.SaveGame();
+        // _storage.SaveGame();
+        _storage.SaveInventory();
     }
 
     public void AddInventoryItem(int id, ItemInventory invItem)
@@ -253,10 +177,14 @@ public class Inventory : MonoBehaviour
 
             items[i].itemGameObject.GetComponent<Image>().sprite = data.items[items[i].id].img;
             items[i].isBullets = data.items[items[i].id].isBullets;
+            items[i].isMedicine = data.items[items[i].id].isMedicine;
+            
         }
 
         // SaveInventoryToFile("path/to/savefile.json");
         // _storage.SaveGame(items);
+        
+        // _storage.SaveInventory();
     }
 
     public void SelectObject()
@@ -348,14 +276,48 @@ public class Inventory : MonoBehaviour
             if (item.isBullets)
             {
                 Bullets += item.count;
+            }
+        }
+        
+        BulletsValueChanged?.Invoke(Bullets);
+        // _storage.SaveGame(items);
+    }
+
+    public bool CheckHeal()
+    {
+        Medicine = 0;
+        
+        foreach (var item in items)
+        {
+            if (item.isMedicine)
+            {
+                Medicine += item.count;
                 // BulletsValueChanged?.Invoke(Bullets);
-                Debug.Log("патроны " + Bullets);
+                Debug.Log("лекарства " + Medicine);
             }
         }
 
-        /*if (Bullets == 0)*/
-        BulletsValueChanged?.Invoke(Bullets);
-        // _storage.SaveGame(items);
+        return Medicine > 0;
+    }
+
+    public void UseMedicine()
+    {
+        for (int i = 0; i < items.Count; i++)
+        {
+            if (items[i].isMedicine)
+            {
+                items[i].count -= 1;
+                Medicine--;
+                // BulletsValueChanged?.Invoke(Bullets);
+                // items[id].count = invItem.count;      
+                if (items[i].count <= 0)
+                    AddItem(i, data.items[0], 0);
+
+                return;
+            }
+        }
+        
+        UpdateInventory();
     }
 
     public void DecreaseBullets()
@@ -433,6 +395,8 @@ public class Inventory : MonoBehaviour
             currentID = -1;
             movingObject.gameObject.SetActive(false);
             isDragging = false;
+            
+            _storage.SaveInventory();
         }
     }
 
@@ -461,4 +425,5 @@ public class ItemInventory
     public GameObject itemGameObject;
     public int count;
     public bool isBullets;
+    public bool isMedicine;
 }
